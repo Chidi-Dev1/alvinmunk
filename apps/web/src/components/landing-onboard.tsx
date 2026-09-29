@@ -66,9 +66,14 @@ export function LandingOnboard() {
     if (h.length < 3) return toast.error(t('onboard.landing.errShort'));
     setBusy(true);
     try {
-      const [{ recordGenesis }, { claimHandle, isHandleAvailable }] = await Promise.all([
+      const [
+        { recordGenesis },
+        { claimHandle, isHandleAvailable },
+        { bindInviter },
+      ] = await Promise.all([
         import('@/lib/genesis'),
         import('@/lib/registry'),
+        import('@/lib/invite'),
       ]);
       const w = await connect();
       if (!(await isHandleAvailable(h))) {
@@ -77,6 +82,8 @@ export function LandingOnboard() {
       }
       const tx = w.kind === 'passkey' ? undefined : await recordGenesis(w, h);
       await claimHandle(w, h);
+      // arrived via /v/<handle>? bind the inviter on-chain (any wallet kind, best-effort)
+      await bindInviter(w);
       const p: Profile = { handle: h, address: w.address, createdAt: Date.now(), genesisTx: tx };
       setProfile(p);
       identify(w.address, { handle: h, walletKind: w.kind });

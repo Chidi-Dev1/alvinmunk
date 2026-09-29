@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useWallet } from '@/components/wallet/wallet-provider';
 import { recordGenesis } from '@/lib/genesis';
+import { bindInviter } from '@/lib/invite';
 import { claimHandle, isHandleAvailable } from '@/lib/registry';
 import { normalizeHandle, type Profile } from '@/lib/profile';
 import { humanizeError } from '@/lib/utils';
@@ -58,6 +59,8 @@ export function Onboarding() {
       }
       const tx = w.kind === 'passkey' ? undefined : await recordGenesis(w, h);
       await claimHandle(w, h);
+      // arrived via /v/<handle>? bind the inviter on-chain (any wallet kind, best-effort)
+      await bindInviter(w);
       const p: Profile = {
         handle: h,
         address: w.address,
